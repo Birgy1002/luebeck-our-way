@@ -1,4 +1,3 @@
-
 const P = window.PLACES, G = window.GASTRO, W = window.WALKS;
 const pMap = Object.fromEntries(P.map(x=>[x.id,x]));
 const gMap = Object.fromEntries(G.map(x=>[x.id,x]));
@@ -14,7 +13,9 @@ let state={
   returnTarget:null,
   map:null,
   markers:[],
-  walkLine:null
+  walkLine:null,
+  walkReturnLine:null,
+  walkMarkers:[]
 };
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -218,40 +219,157 @@ function initMap(){
  },90);
 }
 window.openPlaceFromMap=id=>openPlace(id);window.openFoodFromMap=id=>openFood(id);
-function applyMapMode(){
- if(!state.map)return;state.markers.forEach(m=>{let show=state.mapMode==="all"||(state.mapMode==="places"&&m._kind==="place")||(state.mapMode==="food"&&m._kind==="food")||(state.mapMode==="photos"&&m._kind==="place"&&m._photo);if(show){if(!state.map.hasLayer(m))m.addTo(state.map)}else if(state.map.hasLayer(m))state.map.removeLayer(m)})
-}
-$$("[data-map-mode]").forEach(b=>b.onclick=()=>{$$("[data-map-mode]").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.mapMode=b.dataset.mapMode;applyMapMode()});
-function routeCoords(w){
- const items=[...w.stops,...(w.returnRoute||[])];return items.map(stepData).map(d=>d.coords).filter(Boolean)
-}
-function drawSelectedWalk(){
+function clearWalkOverlay(){
  if(!state.map)return;
- if(state.walkLine){
-   state.map.removeLayer(state.walkLine);
-   state.walkLine=null;
+ if(state.walkLine){state.map.removeLayer(state.walkLine);state.walkLine=null}
+ if(state.walkReturnLine){state.map.removeLayer(state.walkReturnLine);state.walkReturnLine=null}
+ state.walkMarkers.forEach(m=>{if(state.map.hasLayer(m))state.map.removeLayer(m)});
+ state.walkMarkers=[];
+}
+
+function applyMapMode(){
+ if(!state.map)return;
+
+ // A selected Walk is its own map mode: hide the general city pins.
+ if(state.selectedWalk){
+   state.markers.forEach(m=>{if(state.map.hasLayer(m))state.map.removeLayer(m)});
+   return;
  }
- const id=$("#mapWalkSelect").value;
- state.selectedWalk=id||"";
- if(!id)return;
- const w=W.find(x=>x.id===id);
- if(!w)return;
- const coords=routeCoords(w);
- if(coords.length<2)return;
- state.walkLine=L.polyline(coords,{
-   color:"#168F86",
-   weight:7,
-   opacity:.92,
-   lineCap:"round",
-   lineJoin:"round"
- }).addTo(state.map);
- state.walkLine.bringToBack();
- state.map.fitBounds(state.walkLine.getBounds(),{
-   paddingTopLeft:[34,34],
-   paddingBottomRight:[34,54],
-   maxZoom:15
+
+ state.markers.forEach(m=>{
+   const show =
+     state.mapMode==="all" ||
+     (state.mapMode==="places"&&m._kind==="place") ||
+     (state.mapMode==="food"&&m._kind==="food") ||
+     (state.mapMode==="photos"&&m._kind==="place"&&m._photo);
+   if(show){
+     if(!state.map.hasLayer(m))m.addTo(state.map);
+   }else if(state.map.hasLayer(m)){
+     state.map.removeLayer(m);
+   }
  });
 }
+
+$$("[data-map-mode]").forEach(b=>b.onclick=()=>{
+  // Switching back to a normal map filter leaves Walk mode.
+  state.selectedWalk="";
+  $("#mapWalkSelect").value="";
+  clearWalkOverlay();
+  $$("[data-map-mode]").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.mapMode=b.dataset.mapMode;
+  applyMapMode();
+});
+
+function routeCoordsFromStops(stops){
+ return stops.map(stepData).map(d=>d.coords).filter(Boolean);
+}
+
+function walkMarkerIcon(number,kind){
+ const cls=kind==="food"?" food":"";
+ return L.divIcon({
+   className:"custom-marker",
+   html:`<div style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:${kind==="food"?"#EE786A":"#35AFA5"};color:#fff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.22);font-family:Manrope,sans-serif;font-size:11px;font-weight:800">${number}</div>`,
+   iconSize:[36,36],
+   iconAnchor:[18,18]
+ });
+}
+
+function addWalkMarkers(stops,startNumber=1){
+ let n=startNumber;
+ stops.forEach(s=>{
+   const d=stepData(s);
+   if(!d.coords)return;
+
+   const marker=L.marker(d.coords,{icon:walkMarkerIcon(n,d.kind)});
+   let detailsButton="";
+   if(d.kind==="place" && d.place){
+     detailsButton=`<button class="popup-btn" onclick="window.openPlaceFromMap('${d.place.id}')">Details</button>`;
+   }else if(d.kind==="food" && d.gastro){
+     detailsButton=`<button class="popup-btn" onclick="window.openFoodFromMap('${d.gastro.id}')">Details</button>`;
+   }
+   marker.bindPopup(
+     `<div class="popup-title">${String(n).padStart(2,"0")} · ${d.title}</div>`+
+     `<div class="popup-meta">${d.desc||""}</div>${detailsButton}`
+   );
+   marker.addTo(state.map);
+   state.walkMarkers.push(marker);
+   n++;
+ });
+ return n;
+}
+
+function drawSelectedWalk(){
+ if(!state.map)return;
+
+ clearWalkOverlay();
+
+ const id=$("#mapWalkSelect").value;
+ state.selectedWalk=id||"";
+
+ if(!id){
+   applyMapMode();
+   return;
+ }
+
+ const w=W.find(x=>x.id===id);
+ if(!w)return;
+
+ // Hide every normal Explore / Gastro pin while a Walk is selected.
+ applyMapMode();
+
+ const outbound=routeCoordsFromStops(w.stops);
+ if(outbound.length>=2){
+   state.walkLine=L.polyline(outbound,{
+     color:"#168F86",
+     weight:7,
+     opacity:.96,
+     lineCap:"round",
+     lineJoin:"round"
+   }).addTo(state.map);
+   state.walkLine.bringToFront();
+ }
+
+ let nextNumber=addWalkMarkers(w.stops,1);
+
+ // Water Walk etc.: scenic return is shown as a separate dashed route.
+ if(w.returnRoute?.length){
+   const ret=routeCoordsFromStops(w.returnRoute);
+   if(ret.length>=2){
+     state.walkReturnLine=L.polyline(ret,{
+       color:"#EE786A",
+       weight:5,
+       opacity:.9,
+       dashArray:"10 9",
+       lineCap:"round",
+       lineJoin:"round"
+     }).addTo(state.map);
+     state.walkReturnLine.bringToFront();
+   }
+
+   // Avoid duplicate first return marker when it is identical to the last outbound stop.
+   const returnStops=[...w.returnRoute];
+   if(returnStops.length && w.stops.length){
+     const a=stepData(w.stops[w.stops.length-1]);
+     const b=stepData(returnStops[0]);
+     if(a.coords && b.coords && a.coords[0]===b.coords[0] && a.coords[1]===b.coords[1]){
+       returnStops.shift();
+     }
+   }
+   addWalkMarkers(returnStops,nextNumber);
+ }
+
+ const layers=[state.walkLine,state.walkReturnLine,...state.walkMarkers].filter(Boolean);
+ if(layers.length){
+   const group=L.featureGroup(layers);
+   state.map.fitBounds(group.getBounds(),{
+     paddingTopLeft:[35,35],
+     paddingBottomRight:[35,60],
+     maxZoom:15
+   });
+ }
+}
+
 $("#mapWalkSelect").onchange=()=>{
  state.selectedWalk=$("#mapWalkSelect").value;
  drawSelectedWalk();
