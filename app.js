@@ -8,6 +8,7 @@ let state={
   photoOnly:false,
   foodTag:"All",
   mapMode:"all",
+  selectedWalk:"",
   detailFrom:"home",
   activeDetail:null,
   returnTarget:null,
@@ -181,7 +182,14 @@ function openWalk(id,push=true){
       <button class="action" data-view="walks">${icon("arrow-left")}All walks</button>
     </div></section>`;
   showView("detail",push);
-  setTimeout(()=>{const b=$("#showWalkMap");if(b)b.onclick=()=>{showView("mapview");$("#mapWalkSelect").value=x.id;drawSelectedWalk();}},0)
+  setTimeout(()=>{
+    const b=$("#showWalkMap");
+    if(b)b.onclick=()=>{
+      state.selectedWalk=x.id;
+      $("#mapWalkSelect").value=x.id;
+      showView("mapview");
+    };
+  },0)
 }
 
 function renderMapWalkOptions(){
@@ -200,7 +208,14 @@ function initMap(){
   P.forEach(x=>{const m=L.marker(x.coords,{icon:markerIcon("place",x.photo)});m._kind="place";m._photo=x.photo;m._id=x.id;m.bindPopup(`<div class="popup-title">${x.title}</div><div class="popup-meta">${x.tags.join(" · ")}</div><button class="popup-btn" onclick="window.openPlaceFromMap('${x.id}')">Details</button>`);m.addTo(state.map);state.markers.push(m)});
   G.forEach(x=>{const m=L.marker(x.coords,{icon:markerIcon("food",false)});m._kind="food";m._photo=false;m._id=x.id;m.bindPopup(`<div class="popup-title">${x.title}</div><div class="popup-meta">${x.best}</div><button class="popup-btn" onclick="window.openFoodFromMap('${x.id}')">Details</button>`);m.addTo(state.map);state.markers.push(m)});
  }
- setTimeout(()=>state.map.invalidateSize(),60);applyMapMode();
+ applyMapMode();
+ setTimeout(()=>{
+   state.map.invalidateSize();
+   if(state.selectedWalk){
+     $("#mapWalkSelect").value=state.selectedWalk;
+     drawSelectedWalk();
+   }
+ },90);
 }
 window.openPlaceFromMap=id=>openPlace(id);window.openFoodFromMap=id=>openFood(id);
 function applyMapMode(){
@@ -211,10 +226,36 @@ function routeCoords(w){
  const items=[...w.stops,...(w.returnRoute||[])];return items.map(stepData).map(d=>d.coords).filter(Boolean)
 }
 function drawSelectedWalk(){
- if(!state.map)return;if(state.walkLine){state.map.removeLayer(state.walkLine);state.walkLine=null}
- const id=$("#mapWalkSelect").value;if(!id)return;const w=W.find(x=>x.id===id);const coords=routeCoords(w);state.walkLine=L.polyline(coords,{color:"#35AFA5",weight:5,opacity:.75,lineCap:"round"}).addTo(state.map);state.map.fitBounds(state.walkLine.getBounds(),{padding:[28,28]})
+ if(!state.map)return;
+ if(state.walkLine){
+   state.map.removeLayer(state.walkLine);
+   state.walkLine=null;
+ }
+ const id=$("#mapWalkSelect").value;
+ state.selectedWalk=id||"";
+ if(!id)return;
+ const w=W.find(x=>x.id===id);
+ if(!w)return;
+ const coords=routeCoords(w);
+ if(coords.length<2)return;
+ state.walkLine=L.polyline(coords,{
+   color:"#168F86",
+   weight:7,
+   opacity:.92,
+   lineCap:"round",
+   lineJoin:"round"
+ }).addTo(state.map);
+ state.walkLine.bringToBack();
+ state.map.fitBounds(state.walkLine.getBounds(),{
+   paddingTopLeft:[34,34],
+   paddingBottomRight:[34,54],
+   maxZoom:15
+ });
 }
-$("#mapWalkSelect").onchange=drawSelectedWalk;
+$("#mapWalkSelect").onchange=()=>{
+ state.selectedWalk=$("#mapWalkSelect").value;
+ drawSelectedWalk();
+};
 
 $("#themeToggle").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("luebeckOurWayTheme",document.body.classList.contains("dark")?"dark":"light")};
 if(localStorage.getItem("luebeckOurWayTheme")==="dark")document.body.classList.add("dark");
