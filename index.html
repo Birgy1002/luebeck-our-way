@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#35AFA5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Lübeck Our Way">
+  <meta name="description" content="Lübeck, wie wir es mögen: Orte, Walks, Cafés und Essen.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <title>Lübeck · Our Way</title>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="brand" data-view="home" aria-label="Home">
+      <span class="brand-mark" aria-hidden="true"><svg class="brand-symbol"><use href="#luebeck-mark"></use></svg></span>
+      <span><b>LÜBECK</b><small>OUR WAY</small></span>
+    </button>
+    <div class="top-actions">
+      <span class="lang-pill">DE <i>·</i> EN UI</span>
+      <button id="themeToggle" class="icon-btn" aria-label="Theme"><svg><use href="#sun"></use></svg></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="view active">
+      <div class="hero">
+        <div class="hero-sky"></div>
+        <div class="hero-sun"></div>
+        <div class="hero-water"></div>
+        <div class="hero-towers"><i></i><i></i><i></i><i></i></div>
+        <div class="hero-copy">
+          <p class="eyebrow">PLACES WE LIKE · WALKS WORTH TAKING</p>
+          <h1>Lübeck.<br><em>Our way.</em></h1>
+          <p>Keine Vollständigkeitsliste. Sondern Orte, Wege und Pausen, zu denen wir selbst gehen würden.</p>
+        </div>
+      </div>
+
+      <div class="home-grid">
+        <button class="home-card primary-card" data-open-walk="first-time">
+          <span class="home-card-icon"><svg><use href="#route"></use></svg></span>
+          <div><small>FIRST TIME HERE?</small><b>Start with the walk</b><p>Die Stadt einmal richtig verstehen.</p></div>
+          <svg class="arrow"><use href="#arrow-right"></use></svg>
+        </button>
+        <button class="home-card" data-view="explore">
+          <span class="home-card-icon coral"><svg><use href="#compass"></use></svg></span>
+          <div><small>EXPLORE</small><b>Find your Lübeck</b><p>Art, architecture, water, hidden places.</p></div>
+          <svg class="arrow"><use href="#arrow-right"></use></svg>
+        </button>
+        <button class="home-card" data-view="food" data-food-filter="Coffee">
+          <span class="home-card-icon sun"><svg><use href="#coffee"></use></svg></span>
+          <div><small>COFFEE?</small><b>Worth stopping for</b><p>Mit unserem Take statt Sterne-Ranking.</p></div>
+          <svg class="arrow"><use href="#arrow-right"></use></svg>
+        </button>
+        <button class="home-card" data-view="walks">
+          <span class="home-card-icon navy"><svg><use href="#footprints"></use></svg></span>
+          <div><small>LET'S WALK</small><b>Four ways through town</b><p>First time, water, hidden, art.</p></div>
+          <svg class="arrow"><use href="#arrow-right"></use></svg>
+        </button>
+      </div>
+
+      <section class="panel">
+        <div class="section-head"><div><p class="eyebrow">THE IDEA</p><h2>Curated, not complete.</h2></div><span class="count-pill" id="homeCounts"></span></div>
+        <p class="lead">Öffnungszeiten, Preise und Speisekarten pflegen wir bewusst nicht. Dafür gibt es bei jedem relevanten Ort <b>Check current info ↗</b>. In der App bleiben die Dinge, die länger stimmen: warum der Ort interessant ist, wofür er sich eignet und wie er in einen guten Lübeck-Tag passt.</p>
+      </section>
+
+      <section class="panel soft">
+        <p class="eyebrow">PHOTO</p>
+        <h2>Photo Spots are a filter, not a walk.</h2>
+        <p class="lead">Ein Klick zeigt dir quer durch die Stadt unsere fotografisch interessanten Orte – von Petersgrube über Naturbad bis Museumshafen.</p>
+        <button class="inline-btn" id="homePhotoBtn">Show photo spots <svg><use href="#camera"></use></svg></button>
+      </section>
+    </section>
+
+    <section id="explore" class="view">
+      <div class="page-head">
+        <div><p class="eyebrow">EXPLORE</p><h1>Places worth knowing</h1></div>
+        <span class="big-number" id="exploreCount">0</span>
+      </div>
+      <div class="search-wrap"><svg><use href="#search"></use></svg><input id="exploreSearch" placeholder="Search places…"></div>
+      <div class="chip-scroll" id="exploreChips"></div>
+      <button class="photo-toggle" id="photoToggle"><svg><use href="#camera"></use></svg><span>Photo spots only</span></button>
+      <div id="exploreGrid" class="card-grid"></div>
+    </section>
+
+    <section id="walks" class="view">
+      <div class="page-head"><div><p class="eyebrow">WALKS</p><h1>Choose your route</h1></div><span class="big-number">04</span></div>
+      <p class="page-intro">Vier Walks, vier unterschiedliche Gründe. Überschneidungen gibt es nur dort, wo ein Ort wirklich in mehrere Geschichten gehört.</p>
+      <div id="walkGrid" class="walk-grid"></div>
+    </section>
+
+    <section id="food" class="view">
+      <div class="page-head"><div><p class="eyebrow">EAT & DRINK</p><h1>Where we'd stop</h1></div><span class="big-number" id="foodCount">0</span></div>
+      <div class="search-wrap"><svg><use href="#search"></use></svg><input id="foodSearch" placeholder="Search coffee, dinner, wine…"></div>
+      <div class="chip-scroll" id="foodChips"></div>
+      <div class="legend"><span><i class="dot wedgo"></i> WE'D GO</span><span><i class="dot totry"></i> TO TRY</span></div>
+      <div id="foodGrid" class="card-grid"></div>
+    </section>
+
+    <section id="mapview" class="view">
+      <div class="page-head"><div><p class="eyebrow">MAP</p><h1>Everything in one place</h1></div><svg class="head-icon"><use href="#map"></use></svg></div>
+      <div class="chip-scroll" id="mapChips">
+        <button class="chip active" data-map-mode="all">All</button>
+        <button class="chip" data-map-mode="places">Explore</button>
+        <button class="chip" data-map-mode="food">Eat & Drink</button>
+        <button class="chip" data-map-mode="photos">Photo spots</button>
+      </div>
+      <div class="map-walk-row">
+        <label>SHOW WALK</label>
+        <select id="mapWalkSelect"><option value="">No walk route</option></select>
+      </div>
+      <div id="map" class="map"></div>
+      <div class="map-note"><svg><use href="#info"></use></svg><p>Für echte Fußgängernavigation öffnest du am jeweiligen Stop <b>Directions ↗</b>. Die Linien hier zeigen unsere gewünschte Reihenfolge und dienen als Überblick.</p></div>
+    </section>
+
+    <section id="detail" class="view detail-view">
+      <div class="detail-sticky">
+        <button class="back-btn" id="detailBack"><svg><use href="#arrow-left"></use></svg><span>Back</span></button>
+        <span class="detail-context" id="detailContext"></span>
+      </div>
+      <div id="detailBody"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav active" data-view="home"><svg><use href="#home-icon"></use></svg><span>Home</span></button>
+    <button class="nav" data-view="explore"><svg><use href="#compass"></use></svg><span>Explore</span></button>
+    <button class="nav" data-view="walks"><svg><use href="#footprints"></use></svg><span>Walks</span></button>
+    <button class="nav" data-view="food"><svg><use href="#coffee"></use></svg><span>Eat & Drink</span></button>
+    <button class="nav" data-view="mapview"><svg><use href="#map"></use></svg><span>Map</span></button>
+  </nav>
+</div>
+
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="luebeck-mark" viewBox="0 0 24 24">
+    <path d="M4 15.5h16"/>
+    <path d="M6 15.5V9.5h3v6M15 15.5V8h3v7.5"/>
+    <path d="m5.3 9.5 2.2-4 2.2 4M14.3 8l2.2-4 2.2 4"/>
+    <path d="M3 19c2-1.2 4-1.2 6 0s4 1.2 6 0 4-1.2 6 0"/>
+  </symbol>
+  <symbol id="home-icon" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3Z"/></symbol>
+  <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></symbol>
+  <symbol id="footprints" viewBox="0 0 24 24"><path d="M8 4c1.4 0 2.3 1.5 2.3 3.2S9.5 10 8.1 10 5.8 8.6 5.8 7 6.6 4 8 4ZM15.8 12.8c1.4 0 2.4 1.5 2.4 3.2s-.8 2.8-2.2 2.8-2.4-1.4-2.4-3 .8-3 2.2-3ZM5 11c2 1 3.8 2.8 4 5.5.2 1.5-.8 2.5-2.3 2.5-2.3 0-3.7-2.2-3.7-4.4C3 13 3.8 11.7 5 11ZM14 4.5c2 1 3.8 2.8 4 5.5.2 1.5-.8 2.5-2.3 2.5-2.3 0-3.7-2.2-3.7-4.4 0-1.6.8-2.9 2-3.6Z"/></symbol>
+  <symbol id="coffee" viewBox="0 0 24 24"><path d="M4 8h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5Z"/><path d="M17 10h2a3 3 0 0 1 0 6h-2M7 3v2M11 3v2M15 3v2"/></symbol>
+  <symbol id="map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></symbol>
+  <symbol id="route" viewBox="0 0 24 24"><circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h5a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></symbol>
+  <symbol id="camera" viewBox="0 0 24 24"><path d="M4 7.5h3l1.4-2h7.2l1.4 2h3a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13.5" r="4"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6M5 12h11"/></symbol>
+  <symbol id="arrow-left" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6M8 12h11"/></symbol>
+  <symbol id="external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></symbol>
+  <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></symbol>
+  <symbol id="landmark" viewBox="0 0 24 24"><path d="m3 9 9-5 9 5M5 10h14M6 10v7M10 10v7M14 10v7M18 10v7M4 20h16"/></symbol>
+</svg>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data/places.js"></script>
+<script src="data/gastro.js"></script>
+<script src="data/walks.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
