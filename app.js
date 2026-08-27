@@ -2,7 +2,19 @@
 const P = window.PLACES, G = window.GASTRO, W = window.WALKS;
 const pMap = Object.fromEntries(P.map(x=>[x.id,x]));
 const gMap = Object.fromEntries(G.map(x=>[x.id,x]));
-let state={view:"home",exploreTag:"All",photoOnly:false,foodTag:"All",mapMode:"all",detailFrom:"home",map:null,markers:[],walkLine:null};
+let state={
+  view:"home",
+  exploreTag:"All",
+  photoOnly:false,
+  foodTag:"All",
+  mapMode:"all",
+  detailFrom:"home",
+  activeDetail:null,
+  returnTarget:null,
+  map:null,
+  markers:[],
+  walkLine:null
+};
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const icon=n=>`<svg aria-hidden="true"><use href="#${n}"></use></svg>`;
@@ -23,7 +35,17 @@ document.addEventListener("click",e=>{
   const gf=e.target.closest("[data-open-food]"); if(gf){openFood(gf.dataset.openFood);return;}
   const ww=e.target.closest("[data-open-walk]"); if(ww){openWalk(ww.dataset.openWalk);return;}
 });
-$("#detailBack").onclick=()=>showView(state.detailFrom||"home");
+$("#detailBack").onclick=()=>{
+  const target=state.returnTarget;
+  if(target?.type==="walk"){
+    openWalk(target.id,false);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      window.scrollTo({top:target.scrollY||0,behavior:"instant"});
+    }));
+    return;
+  }
+  showView(target?.view || state.detailFrom || "home");
+};
 
 function renderExploreChips(){
   const tags=["All","Art","Architecture","History","Literature","Water","Green"];
@@ -86,7 +108,15 @@ function mapsDir(address){return `https://www.google.com/maps/dir/?api=1&destina
 function mapsSearch(address){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
 
 function openPlace(id){
-  const x=pMap[id]; if(!x)return; state.detailFrom=state.view==="detail"?"explore":state.view;
+  const x=pMap[id]; if(!x)return;
+  if(state.view==="detail" && state.activeDetail?.type==="walk"){
+    state.returnTarget={type:"walk",id:state.activeDetail.id,scrollY:window.scrollY};
+    state.detailFrom="walks";
+  }else{
+    state.returnTarget={type:"view",view:state.view==="detail"?"explore":state.view};
+    state.detailFrom=state.returnTarget.view;
+  }
+  state.activeDetail={type:"place",id};
   $("#detailContext").textContent="EXPLORE";
   $("#detailBody").innerHTML=`
     <div class="detail-hero"><span class="ghost">${x.photo?icon("camera"):"L"}</span><p class="eyebrow">${tierLabel[x.tier]} · ${x.tags.join(" · ")}</p><h1>${x.title}</h1><p>${x.short}</p></div>
@@ -99,7 +129,15 @@ function openPlace(id){
   showView("detail");
 }
 function openFood(id){
-  const x=gMap[id]; if(!x)return; state.detailFrom=state.view==="detail"?"food":state.view;
+  const x=gMap[id]; if(!x)return;
+  if(state.view==="detail" && state.activeDetail?.type==="walk"){
+    state.returnTarget={type:"walk",id:state.activeDetail.id,scrollY:window.scrollY};
+    state.detailFrom="walks";
+  }else{
+    state.returnTarget={type:"view",view:state.view==="detail"?"food":state.view};
+    state.detailFrom=state.returnTarget.view;
+  }
+  state.activeDetail={type:"food",id};
   $("#detailContext").textContent="EAT & DRINK";
   $("#detailBody").innerHTML=`
     <div class="detail-hero food"><span class="ghost">${icon("coffee")}</span><p class="eyebrow">${statusLabel[x.status]} · ${x.kind.toUpperCase()}</p><h1>${x.title}</h1><p>${x.best}</p></div>
@@ -125,8 +163,11 @@ function stepsHTML(stops){
     ${d.food?.length?`<div class="step-food">${d.food.map(fid=>`<button data-open-food="${fid}">${gMap[fid].title}</button>`).join("")}</div>`:""}
   </div></div>`}).join("")}</div>`;
 }
-function openWalk(id){
-  const x=W.find(w=>w.id===id); if(!x)return; state.detailFrom=state.view==="detail"?"walks":state.view;
+function openWalk(id,push=true){
+  const x=W.find(w=>w.id===id); if(!x)return;
+  state.detailFrom=state.view==="detail"?"walks":state.view;
+  state.returnTarget={type:"view",view:"walks"};
+  state.activeDetail={type:"walk",id};
   $("#detailContext").textContent="WALKS";
   $("#detailBody").innerHTML=`
     <div class="detail-hero walk"><span class="ghost">${icon("route")}</span><p class="eyebrow">${x.meta.join(" · ")}</p><h1>${x.title}</h1><p>${x.subtitle}</p></div>
@@ -139,7 +180,7 @@ function openWalk(id){
       <button class="action primary" id="showWalkMap">${icon("map")}Show on map</button>
       <button class="action" data-view="walks">${icon("arrow-left")}All walks</button>
     </div></section>`;
-  showView("detail");
+  showView("detail",push);
   setTimeout(()=>{const b=$("#showWalkMap");if(b)b.onclick=()=>{showView("mapview");$("#mapWalkSelect").value=x.id;drawSelectedWalk();}},0)
 }
 
