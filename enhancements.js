@@ -96,10 +96,51 @@
   document.addEventListener('click',e=>{const b=e.target.closest('[data-open-event]');if(b){e.preventDefault();e.stopPropagation();openEvent(b.dataset.openEvent)}},true);
   window.addEventListener('popstate',()=>{if(location.hash==='#events'&&typeof showView==='function')showView('events',false)});
 
+  async function fetchFreshEvents(){
+    try{
+      const r=await fetch('./data/events.json',{cache:'no-store'});
+      if(!r.ok)throw new Error(r.status);
+      const d=await r.json();
+      if(!d || !Array.isArray(d.events))throw new Error('Invalid events data');
+      events=d.events;
+      updated=d.updated||null;
+      return true;
+    }catch(err){
+      // Keep the last successfully loaded data instead of blanking the radar.
+      console.warn('Event Radar could not be refreshed',err);
+      return false;
+    }
+  }
+
+  async function refreshEvents(){
+    const ok=await fetchFreshEvents();
+    if(ok){
+      // Re-rendering also removes events that expired since the app was last open.
+      renderEvents();
+    }
+    return ok;
+  }
+
+  function setupForegroundRefresh(){
+    let lastRefreshAt=0;
+    const refreshWhenVisible=()=>{
+      if(document.visibilityState && document.visibilityState!=='visible')return;
+      const now=Date.now();
+      // iOS may fire focus + pageshow + visibilitychange together.
+      if(now-lastRefreshAt<3000)return;
+      lastRefreshAt=now;
+      refreshEvents();
+    };
+    document.addEventListener('visibilitychange',refreshWhenVisible);
+    window.addEventListener('pageshow',refreshWhenVisible);
+    window.addEventListener('focus',refreshWhenVisible);
+  }
+
   async function load(){
     addStyles();addMarkup();patchExplore();patchPlace();
-    try{const r=await fetch('./data/events.json',{cache:'no-store'});if(!r.ok)throw new Error(r.status);const d=await r.json();events=Array.isArray(d.events)?d.events:[];updated=d.updated||null}catch(err){console.warn('Event Radar could not be loaded',err);events=[]}
-    renderEvents();patchPlace();
+    await refreshEvents();
+    patchPlace();
+    setupForegroundRefresh();
   }
 
   load();
