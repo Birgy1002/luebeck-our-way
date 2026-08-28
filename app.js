@@ -156,9 +156,9 @@ function stepData(s){
   if(s.food && typeof s.food==="string"){const x=gMap[s.food];return {title:x.title,desc:x.best,coords:x.coords,kind:"food",gastro:x,food:[]}}
   return {title:s.label,desc:s.note||"",coords:s.coords,kind:s.kind||"walk",food:s.food||[]}
 }
-function stepsHTML(stops){
- return `<div class="walk-steps">${stops.map((s,i)=>{const d=stepData(s);return `
-  <div class="step"><div class="step-num">${String(i+1).padStart(2,"0")}</div><div>
+function stepsHTML(stops,prefix=""){
+ return `<div class="walk-steps">${stops.map((s,i)=>{const d=stepData(s);const label=`${prefix}${i+1}`;return `
+  <div class="step"><div class="step-num">${label}</div><div>
     <h3>${d.title}</h3><p>${d.desc}</p>
     ${d.kind==="place"?`<button class="action" style="display:inline-flex;min-height:0;padding:6px 8px;margin-top:5px" data-open-place="${d.place.id}">Details</button>`:""}
     ${d.kind==="food"?`<button class="action" style="display:inline-flex;min-height:0;padding:6px 8px;margin-top:5px" data-open-food="${d.gastro.id}">Details</button>`:""}
@@ -176,7 +176,7 @@ function openWalk(id,push=true){
     <section class="detail-section"><p class="eyebrow">WHY THIS WAY</p><h2>${x.start} → ${x.end}</h2><p>${x.intro}</p></section>
     <section class="detail-section"><p class="eyebrow">GOOD TO KNOW</p>${x.notes.map(n=>`<p>• ${n}</p>`).join("")}</section>
     <section class="detail-section"><p class="eyebrow">THE ROUTE</p><h2>Stop by stop</h2>${stepsHTML(x.stops)}
-      ${x.returnRoute?`<div class="return-box"><h3>Scenic return to MUK</h3><p>Die Rückroute gehört bewusst zum Konzept – nicht einfach den kürzesten Maps-Weg nehmen.</p></div>${stepsHTML(x.returnRoute)}`:""}
+      ${x.returnRoute?`<div class="return-box"><h3>Scenic return to MUK</h3><p>Die Rückroute gehört bewusst zum Konzept – nicht einfach den kürzesten Maps-Weg nehmen.</p></div>${stepsHTML(x.returnRoute,"R")}`:""}
     </section>
     <section class="detail-section"><div class="actions">
       <button class="action primary" id="showWalkMap">${icon("map")}Show on map</button>
@@ -265,23 +265,24 @@ function routeCoordsFromStops(stops){
  return stops.map(stepData).map(d=>d.coords).filter(Boolean);
 }
 
-function walkMarkerIcon(number,kind){
+function walkMarkerIcon(label,kind){
  const cls=kind==="food"?" food":"";
  return L.divIcon({
    className:"custom-marker",
-   html:`<div style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:${kind==="food"?"#EE786A":"#35AFA5"};color:#fff;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.22);font-family:Manrope,sans-serif;font-size:11px;font-weight:800">${number}</div>`,
+   html:`<div class="walk-map-marker${cls}">${label}</div>`,
    iconSize:[36,36],
    iconAnchor:[18,18]
  });
 }
 
-function addWalkMarkers(stops,startNumber=1){
+function addWalkMarkers(stops,startNumber=1,prefix=""){
  let n=startNumber;
  stops.forEach(s=>{
    const d=stepData(s);
    if(!d.coords)return;
 
-   const marker=L.marker(d.coords,{icon:walkMarkerIcon(n,d.kind)});
+   const label=`${prefix}${n}`;
+   const marker=L.marker(d.coords,{icon:walkMarkerIcon(label,d.kind)});
    let detailsButton="";
    if(d.kind==="place" && d.place){
      detailsButton=`<button class="popup-btn" onclick="window.openPlaceFromMap('${d.place.id}')">Details</button>`;
@@ -289,7 +290,7 @@ function addWalkMarkers(stops,startNumber=1){
      detailsButton=`<button class="popup-btn" onclick="window.openFoodFromMap('${d.gastro.id}')">Details</button>`;
    }
    marker.bindPopup(
-     `<div class="popup-title">${String(n).padStart(2,"0")} · ${d.title}</div>`+
+     `<div class="popup-title">${label} · ${d.title}</div>`+
      `<div class="popup-meta">${d.desc||""}</div>${detailsButton}`
    );
    marker.addTo(state.map);
@@ -330,7 +331,7 @@ function drawSelectedWalk(){
    state.walkLine.bringToFront();
  }
 
- let nextNumber=addWalkMarkers(w.stops,1);
+ addWalkMarkers(w.stops,1);
 
  // Water Walk etc.: scenic return is shown as a separate dashed route.
  if(w.returnRoute?.length){
@@ -347,16 +348,31 @@ function drawSelectedWalk(){
      state.walkReturnLine.bringToFront();
    }
 
-   // Avoid duplicate first return marker when it is identical to the last outbound stop.
+   // Marker logic for Scenic Return:
+   // - don't duplicate the outbound finish (e.g. Bootshaus)
+   // - don't cover the outbound start marker (e.g. MUK = 1)
+   // The coral return line still reaches the complete end point.
    const returnStops=[...w.returnRoute];
    if(returnStops.length && w.stops.length){
-     const a=stepData(w.stops[w.stops.length-1]);
-     const b=stepData(returnStops[0]);
-     if(a.coords && b.coords && a.coords[0]===b.coords[0] && a.coords[1]===b.coords[1]){
+     const outboundLast=stepData(w.stops[w.stops.length-1]);
+     const returnFirst=stepData(returnStops[0]);
+     if(outboundLast.coords && returnFirst.coords &&
+        outboundLast.coords[0]===returnFirst.coords[0] &&
+        outboundLast.coords[1]===returnFirst.coords[1]){
        returnStops.shift();
      }
+
+     if(returnStops.length){
+       const outboundFirst=stepData(w.stops[0]);
+       const returnLast=stepData(returnStops[returnStops.length-1]);
+       if(outboundFirst.coords && returnLast.coords &&
+          outboundFirst.coords[0]===returnLast.coords[0] &&
+          outboundFirst.coords[1]===returnLast.coords[1]){
+         returnStops.pop();
+       }
+     }
    }
-   addWalkMarkers(returnStops,nextNumber);
+   addWalkMarkers(returnStops,1,"R");
  }
 
  const layers=[state.walkLine,state.walkReturnLine,...state.walkMarkers].filter(Boolean);
