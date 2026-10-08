@@ -401,4 +401,19 @@ function boot(){
  const v=location.hash.slice(1);showView(["explore","walks","food","mapview"].includes(v)?v:"home",false);
 }
 boot();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js?v=16",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
+
+
+/* v0.17 – retire old offline app-shell cache.
+   The shared/canonical URL stays unchanged and always loads the current GitHub Pages version. */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",async()=>{
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+      if("caches" in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(k=>k.startsWith("luebeck-our-way-")).map(k=>caches.delete(k)));
+      }
+    }catch(e){ console.warn("Cache cleanup skipped",e); }
+  });
+}
