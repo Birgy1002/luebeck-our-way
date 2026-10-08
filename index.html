@@ -47,10 +47,7 @@
         </div>
       </div>
 
-      <div style="margin:14px 0"><a href="event-radar.html" style="display:block;padding:17px 20px;background:#e4f4f1;border-radius:17px;color:#145f5a;font-weight:800;text-decoration:none">✦ EVENT RADAR · Kultur in Lübeck →<small style="display:block;font-weight:500;margin-top:4px">Highlights, neue Funde und Save the Date · Stand 08.10.2026</small></a></div>
-
-      <section class="panel" id="currentEvents"><div class="section-head"><div><p class="eyebrow">WHAT'S ON · 08.–17.10.2026</p><h2>Event Radar · Highlights</h2></div></div><p class="lead">Aktuelle Lübecker Kulturtermine – kuratiert für uns. Die Auswahl blendet abgelaufene Tage automatisch aus.</p><div id="radarHighlights" class="card-grid"></div><a class="inline-btn" href="event-radar.html">Alle Termine & Save the Date ↗</a></section>
-<div class="home-grid">
+      <div class="home-grid">
         <button class="home-card primary-card" data-open-walk="first-time">
           <span class="home-card-icon"><svg><use href="#route"></use></svg></span>
           <div><small>FIRST TIME HERE?</small><b>Start with the walk</b><p>Die Stadt einmal richtig verstehen.</p></div>
@@ -176,25 +173,6 @@
 <script src="data/gastro.js"></script>
 <script src="data/walks.js"></script>
 <script src="app.js"></script>
-<script>
-(function(){
- const events=[
- ["2026-10-08","19:00","Jahresschau – Vernissage","Kulturwerft Gollan","Kunst"],
- ["2026-10-09","18:00","Restriktion und Freiheit","Museumsquartier St. Annen","Alte Musik"],
- ["2026-10-09","20:15","Percusiano","LiveCV","Experimentelle Musik"],
- ["2026-10-09","19:30","NDR Elbphilharmonie Orchester","MuK","Klassik"],
- ["2026-10-10","20:00","Best of Poetry Slam","Theater Lübeck","Spoken Word"],
- ["2026-10-12","19:30","Klangbilderkonzert","Haus Eden","Kammermusik"],
- ["2026-10-13","20:15","Jazz Jam – John Coltrane","LiveCV","Jazz · Hutkasse"],
- ["2026-10-13","19:00","Impulse – Musikimport","St. Jakobi","Alte Musik"],
- ["2026-10-17","19:30","Schwanensee – Premiere","Theater Lübeck","Tanztheater"]
- ];
- const today=new Date(); const ymd=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
- const visible=events.filter(e=>e[0]>=ymd);
- const el=document.getElementById("radarHighlights");
- if(el)el.innerHTML=visible.length?visible.map(e=>'<a class="place-card" href="event-radar.html" style="display:block;text-decoration:none;color:inherit"><span class="tier welike">'+e[0].slice(8)+'.'+e[0].slice(5,7)+' · '+e[1]+'</span><h2>'+e[2]+'</h2><p class="short">'+e[3]+' · '+e[4]+'</p></a>').join(""):'<p>Keine weiteren Highlights aus diesem Radar-Zeitraum.</p>';
-})();
-</script>
 <script src="field-updates-v14.js"></script>
 <script src="enhancements.js"></script>
 </body>
