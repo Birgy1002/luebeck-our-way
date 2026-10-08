@@ -401,4 +401,4 @@ function boot(){
  const v=location.hash.slice(1);showView(["explore","walks","food","mapview"].includes(v)?v:"home",false);
 }
 boot();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js?v=16",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
