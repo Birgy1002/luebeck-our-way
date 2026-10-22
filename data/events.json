@@ -68,7 +68,7 @@
       "category": "Wine & Dine",
       "section": "notable",
       "priority": 18,
-      "why": "Weinbegleiteter kulinarischer Abend.",
+      "why": "Kulinarischer Abend im Restaurant Waldhuus mit begleitenden Weinen von H. F. von Melle. Hier steht das Zusammenspiel von Speisen und Wein im Mittelpunkt, weniger eine klassische Lehrverkostung.",
       "booking": "Besser reservieren · 130 €",
       "url": "https://www.weinhandel-von-melle.de/"
     },
@@ -110,7 +110,7 @@
       "category": "Theatre",
       "section": "notable",
       "priority": 10,
-      "why": "Kafkas Roman als aktuelles Schauspiel.",
+      "why": "Kafkas Roman über Josef K. und ein undurchschaubares Verfahren als psychologisch und gesellschaftlich aktueller Bühnenstoff. Eine interessante Alternative zu den größeren Musiktheaterproduktionen.",
       "booking": "Besser reservieren",
       "url": "https://www.theaterluebeck.de/"
     },
@@ -124,7 +124,7 @@
       "category": "Tasting",
       "section": "notable",
       "priority": 19,
-      "why": "Rumstile und Herkunftsregionen im Vergleich.",
+      "why": "Thematischer Verkostungsabend zu unterschiedlichen Rumstilen und Herkunftsregionen. Ein Abstecher in die Welt der Spirituosen jenseits des üblichen Weinprogramms.",
       "booking": "Besser reservieren · 29,90 €",
       "url": "https://www.edeka-suellau.de/"
     },
@@ -180,7 +180,7 @@
       "category": "Classical · KOSTENLOS",
       "section": "notable",
       "priority": 13,
-      "why": "Klavierstudierende der Klasse Florian Uhlig.",
+      "why": "Studierende der Klasse von Prof. Florian Uhlig präsentieren Klaviermusik im Kammermusiksaal. Eine gute Gelegenheit, junge Musiker in konzentrierter Atmosphäre zu erleben.",
       "booking": "Spontan möglich · KOSTENLOS",
       "url": "https://www.mh-luebeck.de/"
     },
@@ -222,7 +222,7 @@
       "category": "Experimental Music",
       "section": "notable",
       "priority": 15,
-      "why": "Musikalische Experimente mit Studierenden.",
+      "why": "Musikprojekt mit Studierenden der Musikhochschule Lübeck. Das Format schafft Raum für musikalische Experimente und Begegnungen zwischen Nachwuchsmusikern.",
       "booking": "Eintritt prüfen",
       "url": "https://www.live-cv.de/"
     },
@@ -250,7 +250,7 @@
       "category": "Blues",
       "section": "notable",
       "priority": 16,
-      "why": "Blues mit Blueprint und Gästen.",
+      "why": "Blues-Session mit Blueprint und weiteren Musikern im kleinen LiveCV-Club. Ein unkomplizierter Abend mit direktem Kontakt zur lokalen Musikszene.",
       "booking": "Spontan möglich · Hutkasse",
       "url": "https://www.live-cv.de/"
     },
@@ -320,7 +320,7 @@
       "category": "Theatre",
       "section": "notable",
       "priority": 12,
-      "why": "Premiere der Jane-Austen-Adaption.",
+      "why": "Premiere der Jane-Austen-Adaption in den Kammerspielen. Nach dem zuletzt veröffentlichten Spielplan war die Vorstellung ausverkauft; der kostenlose Werkstatteinblick am 26. Oktober ist eine Alternative.",
       "booking": "Ausverkauft",
       "url": "https://www.theaterluebeck.de/"
     },
